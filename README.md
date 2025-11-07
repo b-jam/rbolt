@@ -1,4 +1,7 @@
 ## rbolt
 
 Inspired by LMDB, bolt and bbolt -> etcd.
-Copy on write B Tree. raft consensus. but in rust. Learning by building it all from scratch.
+Copy on write B Tree. But in Rust
+raft consensus later. Learning by building it all from scratch.
+
+`cargo run` for end to end testing
