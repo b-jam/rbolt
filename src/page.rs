@@ -2,6 +2,7 @@ use crate::db::PAGE_SIZE;
 use std::mem;
 use std::sync::RwLockReadGuard;
 use memmap2::MmapMut;
+use zerocopy::{FromBytes, Immutable, KnownLayout};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum PageError {
@@ -38,11 +39,11 @@ pub enum PageType {
 }
 
 #[repr(C)]
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, FromBytes, KnownLayout, Immutable)]
 pub struct Page {
     pub id: u64, // 8 bytes, 2^64 very large
     pub page_type: u8, // 1 byte, mapped to PageType
-    // 1 byte of padding to align count to even number
+    pub _padding: u8, // 1 byte of explicit padding
     pub count: u16, // The number of kv or child pointers, 2^16 = 65535
     pub overflow: u32, // overflow multiple pages, 2^32 = 4294967296
 }
@@ -50,15 +51,16 @@ pub struct Page {
 const PAGE_HEADER_SIZE: usize = mem::size_of::<Page>(); // 16 bytes
 
 #[repr(C)]
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, FromBytes, KnownLayout, Immutable)]
 pub struct BranchElement {
     pub page_id: u64, // 8 bytes, the ID of the child page this element points to.
     pub ksize: u16, // Size of the key, 2^16 = 65535
     pub kptr: u16, // Offset to the key data within the page
+    pub _padding: [u8; 4], // Explicit padding to 16 bytes
 }
 
 #[repr(C)]
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, FromBytes, KnownLayout, Immutable)]
 pub struct LeafElement {
     pub ksize: u16,
     pub vsize: u16,
