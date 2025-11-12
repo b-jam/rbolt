@@ -1,8 +1,12 @@
 use crate::db::PAGE_SIZE;
-use std::mem;
 use std::sync::RwLockReadGuard;
 use memmap2::MmapMut;
-use zerocopy::{FromBytes, Immutable, KnownLayout};
+use zerocopy::{FromBytes, IntoBytes, Immutable, KnownLayout};
+
+pub const PAGE_HEADER_SIZE: usize = std::mem::size_of::<Page>();
+pub const PAGE_BODY_SIZE: usize = PAGE_SIZE - PAGE_HEADER_SIZE;
+pub const LEAF_ELEMENT_SIZE: usize = std::mem::size_of::<LeafElement>();
+pub const BRANCH_ELEMENT_SIZE: usize = std::mem::size_of::<BranchElement>();
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum PageError {
@@ -39,7 +43,7 @@ pub enum PageType {
 }
 
 #[repr(C)]
-#[derive(Clone, Copy, FromBytes, KnownLayout, Immutable)]
+#[derive(Clone, Copy, FromBytes, IntoBytes, KnownLayout, Immutable)]
 pub struct Page {
     pub id: u64, // 8 bytes, 2^64 very large
     pub page_type: u8, // 1 byte, mapped to PageType
@@ -48,10 +52,8 @@ pub struct Page {
     pub overflow: u32, // overflow multiple pages, 2^32 = 4294967296
 }
 
-const PAGE_HEADER_SIZE: usize = mem::size_of::<Page>(); // 16 bytes
-
 #[repr(C)]
-#[derive(Clone, Copy, FromBytes, KnownLayout, Immutable)]
+#[derive(Clone, Copy, FromBytes, IntoBytes, KnownLayout, Immutable)]
 pub struct BranchElement {
     pub page_id: u64, // 8 bytes, the ID of the child page this element points to.
     pub ksize: u16, // Size of the key, 2^16 = 65535
@@ -60,7 +62,7 @@ pub struct BranchElement {
 }
 
 #[repr(C)]
-#[derive(Clone, Copy, FromBytes, KnownLayout, Immutable)]
+#[derive(Clone, Copy, FromBytes, IntoBytes, KnownLayout, Immutable)]
 pub struct LeafElement {
     pub ksize: u16,
     pub vsize: u16,
@@ -71,9 +73,6 @@ pub struct LeafElement {
 
 
 pub trait PageReader {
-    // Retrieves a Page struct reference from a given page ID within the memory map.
-    // Validates both physical bounds (mmap size) and logical validity (page_id <= highest_page_id).
-    // Returns an error if the page_id is invalid.
     fn get_page(&self, page_id: u64, highest_page_id: u64) -> Result<&'static Page, PageError>;
 }
 

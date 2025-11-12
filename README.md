@@ -1,5 +1,7 @@
 ## rbolt
 
+### Inspiration
+
 I got really inspired by LMDB, which inspired bolt, which the original maintainer "finished", so it was forked as bbolt\
 As it turns out, bbolt is the storage engine at the heart of Kubernetes. (plus raft for distribution/clustering)
 
@@ -9,6 +11,8 @@ It's not everyday you get inspired to just write a database. I wrote a small art
 The idea with this project is doing the same thing that bolt did, just copy the code in a different language.
 I love rust, so I reckon I might be able to get great performance here.
 
+### Design
+
 What I'm building is a b+ tree with copy on write (as opposed to an LSM tree)
 
 Currently its just 1 database per process.
@@ -17,9 +21,12 @@ The basic idea is we are mmapping the database file, so everything is really qui
 Every 4kb page is a b+ tree node, which stores a bunch of key pointers if its a branch, or a bunch of sorted KVs if its a leaf.
 Means when you get to a page, you can scan it really really quick.
 
-I'm using zerocopy to avoid unsafe while not actually wasting time copying values around <3. Just read the page into memory once.
+### Zerocopy
+Just wanted to say how much I love zerocopy.
+
+I'm using zerocopy to avoid unsafe while not actually wasting time/memory copying values around. Just read the page into memory once. <3
 
 
-This is a learning project, but fun and might actually be pretty useful when done. I'll do raft later
+This is a learning project, but fun. Might actually be useful when done. I'll do raft later
 
 `cargo run` for end to end testing

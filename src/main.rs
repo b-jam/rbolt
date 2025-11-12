@@ -1,5 +1,5 @@
-use std::{default, fs::File, io::{self, Write, Seek}, path::Path, sync::RwLock};
-use memmap2::{Mmap, MmapMut, MmapOptions};
+use std::{fs::File, io::{self, Write, Seek}, path::Path, sync::RwLock};
+use memmap2::{MmapMut, MmapOptions};
 
 const PAGE_SIZE: usize = 4096;
 const MAGIC: u32 = 0x73796E63;
